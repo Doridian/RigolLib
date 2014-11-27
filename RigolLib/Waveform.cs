@@ -4,23 +4,26 @@ namespace RigolLib
 {
     public class Waveform
     {
-        public readonly string xunit, yunit;
-        private Dictionary<double, double> points = new Dictionary<double, double>();
+        public readonly string XUnit, YUnit;
+        public readonly Point[] Points;
 
-        internal Waveform(string xunit, string yunit)
+        public class Point
         {
-            this.xunit = xunit;
-            this.yunit = yunit;
+            public readonly double X;
+            public readonly double Y;
+
+            internal Point(double x, double y)
+            {
+                X = x;
+                Y = y;
+            }
         }
 
-        internal void AddPoint(double time, double value)
+        internal Waveform(string xunit, string yunit, Point[] points)
         {
-            points[time] = value;
-        }
-
-        public Dictionary<double, double> GetPoints()
-        {
-            return points;
+            XUnit = xunit;
+            YUnit = yunit;
+            Points = points;
         }
     }
 }

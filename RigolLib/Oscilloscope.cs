@@ -1,5 +1,6 @@
 ﻿using NationalInstruments.VisaNS;
 using System;
+using System.Collections.Generic;
 
 namespace RigolLib
 {
@@ -19,42 +20,50 @@ namespace RigolLib
             this.horizontalScales = horizontalScales;
         }
 
-        public Waveform GetWaveform(int channel, bool raw)
+        public void Run()
         {
-            SendCommand(":WAV:FORMat BYTE");
-            SendCommand(":WAV:SOURce CHAN" + channel);
-
-            string mdepthStr = QueryString(":ACQuire:MDEPth?");
-            if (mdepthStr == "AUTO")
-                mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * horizontalScales);
-            else
-                mdepth = long.Parse(mdepthStr);
-
-            if (raw)
-            {
-                SendCommand(":WAV:MODE RAW");
-            }
-            else
-            {
-                SendCommand(":WAV:MODE NORM");
-                SendCommand(":WAV:STARt 1");
-                SendCommand(":WAV:STOP 1200");
-            }
-
-            string[] preamble = QueryString(":WAVeform:PREamble?").Split(',');
-
-            this.raw = raw;
-            xincrement = ParseScientific(preamble[4]);
-            xorigin = ParseScientific(preamble[5]);
-            xreference = ParseScientific(preamble[6]);
-            yincrement = ParseScientific(preamble[7]);
-            yorigin = ParseScientific(preamble[8]);
-            yreference = ParseScientific(preamble[9]);
-
-            return QueryWaveform();
+            SendCommand(":RUN");
         }
 
-        private long AddWaveformData(Waveform waveform, long offset, int waveformSize)
+        public Waveform GetWaveform(int channel, bool raw = false, bool single = false)
+        {
+            lock (communiationLock)
+            {
+                SendCommand(":WAV:FORMat BYTE");
+                SendCommand(":WAV:SOURce CHAN" + channel);
+
+                string mdepthStr = QueryString(":ACQuire:MDEPth?");
+                if (mdepthStr == "AUTO")
+                    mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * horizontalScales);
+                else
+                    mdepth = long.Parse(mdepthStr);
+
+                if (raw)
+                {
+                    SendCommand(":WAV:MODE RAW");
+                }
+                else
+                {
+                    SendCommand(":WAV:MODE NORM");
+                    SendCommand(":WAV:STARt 1");
+                    SendCommand(":WAV:STOP 1200");
+                }
+
+                string[] preamble = QueryString(":WAVeform:PREamble?").Split(',');
+
+                this.raw = raw;
+                xincrement = ParseScientific(preamble[4]);
+                xorigin = ParseScientific(preamble[5]);
+                xreference = ParseScientific(preamble[6]);
+                yincrement = ParseScientific(preamble[7]);
+                yorigin = ParseScientific(preamble[8]);
+                yreference = ParseScientific(preamble[9]);
+
+                return QueryWaveform(single);
+            }
+        }
+
+        private long AddWaveformData(List<Waveform.Point> points, long offset, int waveformSize)
         {
             byte[] wavData = QueryBytes(":WAV:DATA?", waveformSize + BaseDevice.DEFAULT_BUFFER_SIZE);
 
@@ -63,39 +72,46 @@ namespace RigolLib
             //Skip first 11 bytes, those are info data
             for (long x = WAV_DATA_X_START; x < wavDataLength + WAV_DATA_X_START; x++)
             {
-                waveform.AddPoint(
+                points.Add(new Waveform.Point(
                     (((double)(x - WAV_DATA_X_START + offset)) - xorigin - xreference) * xincrement,
                     (((double)wavData[x]) - yorigin - yreference) * yincrement
-                );
+                ));
             }
 
             return wavDataLength;
         }
 
-        public Waveform QueryWaveform()
+        public Waveform QueryWaveform(bool single = false)
         {
-            Waveform waveform = new Waveform("s", "V");
+            List<Waveform.Point> points = new List<Waveform.Point>();
 
-            if (raw)
+            lock (communiationLock)
             {
-                SendCommand(":STOP");
-
-                long currentPos = 0;
-                while(currentPos < mdepth)
+                if (raw)
                 {
-                    SendCommand(":WAV:STARt " + (currentPos + 1));
-                    SendCommand(":WAV:STOP " + Math.Min(currentPos + MAX_WAVEFORM_QUERY_SIZE, mdepth));
-                    currentPos += AddWaveformData(waveform, currentPos, MAX_WAVEFORM_QUERY_SIZE);
+                    SendCommand(":STOP");
+                    if (single)
+                        SendCommand(":SINGle");
+
+                    long currentPos = 0;
+                    while (currentPos < mdepth)
+                    {
+                        SendCommand(":WAV:STARt " + (currentPos + 1));
+                        SendCommand(":WAV:STOP " + Math.Min(currentPos + MAX_WAVEFORM_QUERY_SIZE, mdepth));
+                        currentPos += AddWaveformData(points, currentPos, MAX_WAVEFORM_QUERY_SIZE);
+                    }
+
+                    SendCommand(":RUN");
                 }
-
-                SendCommand(":RUN");
+                else
+                {
+                    if (single)
+                        SendCommand(":SINGle");
+                    AddWaveformData(points, 0, 1200);
+                }
             }
-            else
-            {
-                AddWaveformData(waveform, 0, 1200);
-            }
 
-            return waveform;
+            return new Waveform("s", "V", points.ToArray());
         }
     }
 }

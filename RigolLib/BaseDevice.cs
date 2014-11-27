@@ -11,6 +11,8 @@ namespace RigolLib
         private readonly ResourceManager resourceManager;
         private MessageBasedSession session = null;
 
+        protected readonly object communiationLock = new object();
+
         internal BaseDevice(ResourceManager resourceManager, string resource)
         {
             this.resource = resource;
@@ -34,18 +36,29 @@ namespace RigolLib
 
         protected void SendCommand(string command)
         {
-            GetSession().Write(command);
+            lock (communiationLock)
+            {
+                GetSession().Write(command);
+            }
         }
 
         protected string QueryString(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            string ret = GetSession().Query(query, bufferSize);
+            string ret;
+            lock (communiationLock)
+            {
+                ret = GetSession().Query(query, bufferSize);
+            }
             return ret.Remove(ret.Length - 1);
         }
 
         protected byte[] QueryBytes(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            byte[] response = GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query), bufferSize);
+            byte[] response;
+            lock (communiationLock)
+            {
+                response = GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query), bufferSize);
+            }
             byte[] ret = new byte[response.Length - 1];
             Buffer.BlockCopy(response, 0, ret, 0, ret.Length);
             return ret;
