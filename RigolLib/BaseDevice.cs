@@ -5,6 +5,8 @@ namespace RigolLib
 {
     public class BaseDevice : IDisposable
     {
+        internal const int DEFAULT_BUFFER_SIZE = 2048;
+
         private readonly string resource;
         private readonly ResourceManager resourceManager;
         private MessageBasedSession session = null;
@@ -20,7 +22,7 @@ namespace RigolLib
         {
             if (session == null)
                 session = (MessageBasedSession)resourceManager.Open(resource);
-            session.DefaultBufferSize = 1000000 + 8192;
+            session.DefaultBufferSize = DEFAULT_BUFFER_SIZE;
             return session;
         }
 
@@ -35,15 +37,15 @@ namespace RigolLib
             GetSession().Write(command);
         }
 
-        protected string QueryString(string query)
+        protected string QueryString(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            string ret = GetSession().Query(query);
+            string ret = GetSession().Query(query, bufferSize);
             return ret.Remove(ret.Length - 1);
         }
 
-        protected byte[] QueryBytes(string query)
+        protected byte[] QueryBytes(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            byte[] response = GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query));
+            byte[] response = GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query), bufferSize);
             byte[] ret = new byte[response.Length - 1];
             Buffer.BlockCopy(response, 0, ret, 0, ret.Length);
             return ret;
@@ -54,9 +56,9 @@ namespace RigolLib
             return Double.Parse(arg, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        protected double QueryScientific(string query)
+        protected double QueryScientific(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            return ParseScientific(QueryString(query));
+            return ParseScientific(QueryString(query, bufferSize));
         }
     }
 }

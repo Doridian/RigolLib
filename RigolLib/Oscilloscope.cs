@@ -5,6 +5,9 @@ namespace RigolLib
 {
     public class Oscilloscope : BaseDevice
     {
+        const int WAV_DATA_X_START = 11;
+        const int MAX_WAVEFORM_QUERY_SIZE = 1000000;
+
         readonly double horizontalScales; // MSO1000Z/DS1000Z
 
         double xincrement, xorigin, xreference, yincrement, yorigin, yreference;
@@ -51,11 +54,9 @@ namespace RigolLib
             return QueryWaveform();
         }
 
-        const int WAV_DATA_X_START = 11;
-
-        private long AddWaveformData(Waveform waveform, long offset)
+        private long AddWaveformData(Waveform waveform, long offset, int waveformSize)
         {
-            byte[] wavData = QueryBytes(":WAV:DATA?");
+            byte[] wavData = QueryBytes(":WAV:DATA?", waveformSize + BaseDevice.DEFAULT_BUFFER_SIZE);
 
             long wavDataLength = long.Parse(System.Text.Encoding.ASCII.GetString(wavData, 2, 9));
 
@@ -83,15 +84,15 @@ namespace RigolLib
                 while(currentPos < mdepth)
                 {
                     SendCommand(":WAV:STARt " + (currentPos + 1));
-                    SendCommand(":WAV:STOP " + Math.Min(currentPos + 1000000, mdepth));
-                    currentPos += AddWaveformData(waveform, currentPos);
+                    SendCommand(":WAV:STOP " + Math.Min(currentPos + MAX_WAVEFORM_QUERY_SIZE, mdepth));
+                    currentPos += AddWaveformData(waveform, currentPos, MAX_WAVEFORM_QUERY_SIZE);
                 }
 
                 SendCommand(":RUN");
             }
             else
             {
-                AddWaveformData(waveform, 0);
+                AddWaveformData(waveform, 0, 1200);
             }
 
             return waveform;
