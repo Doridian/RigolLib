@@ -11,11 +11,15 @@ namespace RigolLib
         {
             public readonly double X;
             public readonly double Y;
+            public readonly double RawX;
+            public readonly double RawY;
 
-            internal Point(double x, double y)
+            internal Point(double x, double y, double rawX, double rawY)
             {
                 X = x;
                 Y = y;
+                RawX = rawX;
+                RawY = rawY;
             }
         }
 

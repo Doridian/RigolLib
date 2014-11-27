@@ -65,16 +65,15 @@ namespace RigolGUI
                 points = waveform.Points;
             }
 
-            gl.Ortho2D(0, points.Length, -3, 3);
+            gl.Ortho2D(0, points.Length, 0, 255);
             gl.Viewport(0, 0, mainGraph.Width, mainGraph.Height);
 
             gl.Begin(OpenGL.GL_LINE_STRIP);
             gl.Color(1.0f, 0.0f, 0.0f);
 
-            for (int x = 0; x < points.Length; x++)
+            foreach(Waveform.Point point in points)
             {
-                Waveform.Point point = points[x];
-                gl.Vertex(x, point.Y);
+                gl.Vertex(point.RawX, point.RawY);
             }
 
             gl.End();

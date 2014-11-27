@@ -72,9 +72,12 @@ namespace RigolLib
             //Skip first 11 bytes, those are info data
             for (long x = WAV_DATA_X_START; x < wavDataLength + WAV_DATA_X_START; x++)
             {
+                double y = wavData[x];
                 points.Add(new Waveform.Point(
                     (((double)(x - WAV_DATA_X_START + offset)) - xorigin - xreference) * xincrement,
-                    (((double)wavData[x]) - yorigin - yreference) * yincrement
+                    (y - yorigin - yreference) * yincrement,
+                    x,
+                    y
                 ));
             }
 
