@@ -15,7 +15,7 @@ namespace RigolLib
 
         internal void AddPoint(double time, double value)
         {
-            points.Add(time, value);
+            points[time] = value;
         }
 
         public Dictionary<double, double> GetPoints()

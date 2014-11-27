@@ -9,6 +9,8 @@ namespace RigolLib
         private readonly ResourceManager resourceManager;
         private MessageBasedSession session = null;
 
+        const double NUMBER_HORIZONTAL_SCALES = 12; // MSO1000Z/DS1000Z
+
         internal Oscilloscope(ResourceManager resourceManager, string resource)
         {
             this.resource = resource;
@@ -17,16 +19,25 @@ namespace RigolLib
 
         double xincrement, xorigin, xreference, yincrement, yorigin, yreference;
         bool raw;
+        long mdepth;
 
         public Waveform GetWaveform(int channel, bool raw)
         {
             SendCommand(":WAV:FORMat BYTE");
             SendCommand(":WAV:SOURce CHAN" + channel);
+
+            string mdepthStr = QueryString(":ACQuire:MDEPth?");
+            Console.Out.WriteLine(QueryString(":TIMebase:MAIN:SCALe?"));
+            if (mdepthStr == "AUTO")
+                mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * NUMBER_HORIZONTAL_SCALES);
+            else
+                mdepth = long.Parse(mdepthStr);
+
             if (raw)
             {
                 SendCommand(":WAV:MODE RAW");
                 SendCommand(":WAV:STARt 1");
-                SendCommand(":WAV:STOP " + QueryString(":ACQuire:MDEPth?"));
+                SendCommand(":WAV:STOP " + mdepth);
             }
             else
             {
@@ -50,27 +61,46 @@ namespace RigolLib
 
         const int WAV_DATA_X_START = 11;
 
-        public Waveform QueryWaveform()
+        private long AddWaveformData(Waveform waveform, long offset)
         {
-            if (raw)
-                SendCommand(":STOP");
-
             byte[] wavData = QueryBytes(":WAV:DATA?");
-            Waveform waveform = new Waveform("s", "V");
 
-            int wavDataLength = int.Parse(System.Text.Encoding.ASCII.GetString(wavData, 6, 4));
+            long wavDataLength = long.Parse(System.Text.Encoding.ASCII.GetString(wavData, 2, 9));
 
             //Skip first 11 bytes, those are info data
-            for (int x = WAV_DATA_X_START; x < wavDataLength + WAV_DATA_X_START; x++)
+            for (long x = WAV_DATA_X_START; x < wavDataLength + WAV_DATA_X_START; x++)
             {
                 waveform.AddPoint(
-                    (((double)(x - WAV_DATA_X_START)) - xorigin - xreference) * xincrement,
+                    (((double)(x - WAV_DATA_X_START + offset)) - xorigin - xreference) * xincrement,
                     (((double)wavData[x]) - yorigin - yreference) * yincrement
                 );
             }
 
+            return wavDataLength;
+        }
+
+        public Waveform QueryWaveform()
+        {
+            Waveform waveform = new Waveform("s", "V");
+
             if (raw)
+            {
+                SendCommand(":STOP");
+
+                long currentPos = 0;
+                while(currentPos < mdepth)
+                {
+                    SendCommand(":WAV:STARt " + (currentPos + 1));
+                    SendCommand(":WAV:STOP " + Math.Min(currentPos + 1000000, mdepth));
+                    currentPos += AddWaveformData(waveform, currentPos);
+                }
+
                 SendCommand(":RUN");
+            }
+            else
+            {
+                AddWaveformData(waveform, 0);
+            }
 
             return waveform;
         }
@@ -79,7 +109,7 @@ namespace RigolLib
         {
             if (session == null)
                 session = (MessageBasedSession)resourceManager.Open(resource);
-            session.DefaultBufferSize = 2048;
+            session.DefaultBufferSize = 1000000 + 8192;
             return session;
         }
 
@@ -96,7 +126,7 @@ namespace RigolLib
 
         private string QueryString(string query)
         {
-            return GetSession().Query(query);
+            return GetSession().Query(query).Trim();
         }
 
         private byte[] QueryBytes(string query)
