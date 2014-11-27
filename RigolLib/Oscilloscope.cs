@@ -3,15 +3,18 @@ using System;
 
 namespace RigolLib
 {
-    public class Oscilloscope : BaseDevice, IDisposable
+    public class Oscilloscope : BaseDevice
     {
-        const double NUMBER_HORIZONTAL_SCALES = 12; // MSO1000Z/DS1000Z
+        readonly double horizontalScales; // MSO1000Z/DS1000Z
 
         double xincrement, xorigin, xreference, yincrement, yorigin, yreference;
         bool raw;
         long mdepth;
 
-        internal Oscilloscope(ResourceManager resourceManager, string resource) : base(resourceManager, resource) { }
+        internal Oscilloscope(ResourceManager resourceManager, string resource, int horizontalScales) : base(resourceManager, resource)
+        {
+            this.horizontalScales = horizontalScales;
+        }
 
         public Waveform GetWaveform(int channel, bool raw)
         {
@@ -20,7 +23,7 @@ namespace RigolLib
 
             string mdepthStr = QueryString(":ACQuire:MDEPth?");
             if (mdepthStr == "AUTO")
-                mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * NUMBER_HORIZONTAL_SCALES);
+                mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * horizontalScales);
             else
                 mdepth = long.Parse(mdepthStr);
 

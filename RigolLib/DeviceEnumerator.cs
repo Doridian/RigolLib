@@ -29,7 +29,7 @@ namespace RigolLib
                                 case "DS1104Z":
                                 case "DS1074Z":
                                 case "DS1054Z":
-                                    scopes.Add(new Oscilloscope(resourceManager, resource));
+                                    scopes.Add(new Oscilloscopes.DS1000Z(resourceManager, resource));
                                     break;
                             }
                         }

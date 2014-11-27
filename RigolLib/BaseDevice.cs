@@ -1,13 +1,9 @@
 ﻿using NationalInstruments.VisaNS;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RigolLib
 {
-    public class BaseDevice
+    public class BaseDevice : IDisposable
     {
         private readonly string resource;
         private readonly ResourceManager resourceManager;
