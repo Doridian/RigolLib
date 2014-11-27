@@ -36,8 +36,6 @@ namespace RigolLib
             if (raw)
             {
                 SendCommand(":WAV:MODE RAW");
-                SendCommand(":WAV:STARt 1");
-                SendCommand(":WAV:STOP " + mdepth);
             }
             else
             {
