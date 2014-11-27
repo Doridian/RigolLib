@@ -12,8 +12,9 @@ namespace RigolLib
         readonly double horizontalScales; // MSO1000Z/DS1000Z
 
         double xincrement, xorigin, xreference, yincrement, yorigin, yreference;
-        bool raw;
+        bool raw, single;
         long mdepth;
+        string channel = "";
 
         internal Oscilloscope(ResourceManager resourceManager, string resource, int horizontalScales) : base(resourceManager, resource)
         {
@@ -25,41 +26,49 @@ namespace RigolLib
             SendCommand(":RUN");
         }
 
-        public Waveform GetWaveform(int channel, bool raw = false, bool single = false)
+        public void SetWaveformConfig(string channel, bool raw = false, bool single = false, bool fast = true)
         {
             lock (communiationLock)
             {
-                SendCommand(":WAV:FORMat BYTE");
-                SendCommand(":WAV:SOURce CHAN" + channel);
-
-                string mdepthStr = QueryString(":ACQuire:MDEPth?");
-                if (mdepthStr == "AUTO")
-                    mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * horizontalScales);
-                else
-                    mdepth = long.Parse(mdepthStr);
-
-                if (raw)
-                {
-                    SendCommand(":WAV:MODE RAW");
-                }
-                else
-                {
-                    SendCommand(":WAV:MODE NORM");
-                    SendCommand(":WAV:STARt 1");
-                    SendCommand(":WAV:STOP 1200");
-                }
-
-                string[] preamble = QueryString(":WAVeform:PREamble?").Split(',');
+                if (this.raw != raw)
+                    fast = false;
 
                 this.raw = raw;
-                xincrement = ParseScientific(preamble[4]);
-                xorigin = ParseScientific(preamble[5]);
-                xreference = ParseScientific(preamble[6]);
-                yincrement = ParseScientific(preamble[7]);
-                yorigin = ParseScientific(preamble[8]);
-                yreference = ParseScientific(preamble[9]);
+                this.single = single;
 
-                return QueryWaveform(single);
+                if (this.channel != channel || !fast)
+                    SendCommand(":WAV:SOURce " + channel);
+
+                if (!fast)
+                {
+                    string mdepthStr = QueryString(":ACQuire:MDEPth?");
+                    if (mdepthStr == "AUTO")
+                        mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * horizontalScales);
+                    else
+                        mdepth = long.Parse(mdepthStr);
+
+                    SendCommand(":WAV:FORMat BYTE");
+
+                    if (raw)
+                    {
+                        SendCommand(":WAV:MODE RAW");
+                    }
+                    else
+                    {
+                        SendCommand(":WAV:MODE NORM");
+                        SendCommand(":WAV:STARt 1");
+                        SendCommand(":WAV:STOP 1200");
+                    }
+
+                    string[] preamble = QueryString(":WAVeform:PREamble?").Split(',');
+
+                    xincrement = ParseScientific(preamble[4]);
+                    xorigin = ParseScientific(preamble[5]);
+                    xreference = ParseScientific(preamble[6]);
+                    yincrement = ParseScientific(preamble[7]);
+                    yorigin = ParseScientific(preamble[8]);
+                    yreference = ParseScientific(preamble[9]);
+                }
             }
         }
 
@@ -84,7 +93,7 @@ namespace RigolLib
             return wavDataLength;
         }
 
-        public Waveform QueryWaveform(bool single = false)
+        public Waveform QueryWaveform()
         {
             List<Waveform.Point> points = new List<Waveform.Point>();
 

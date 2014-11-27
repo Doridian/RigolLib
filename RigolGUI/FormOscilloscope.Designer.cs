@@ -30,6 +30,7 @@
         {
             this.mainGraph = new SharpGL.OpenGLControl();
             this.btnRefresh = new System.Windows.Forms.Button();
+            this.cbChannel = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).BeginInit();
             this.SuspendLayout();
             // 
@@ -56,11 +57,28 @@
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
+            // cbChannel
+            // 
+            this.cbChannel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbChannel.FormattingEnabled = true;
+            this.cbChannel.Items.AddRange(new object[] {
+            "CHAN1",
+            "CHAN2",
+            "CHAN3",
+            "CHAN4",
+            "MATH"});
+            this.cbChannel.Location = new System.Drawing.Point(172, 21);
+            this.cbChannel.Name = "cbChannel";
+            this.cbChannel.Size = new System.Drawing.Size(185, 21);
+            this.cbChannel.TabIndex = 4;
+            this.cbChannel.SelectedIndexChanged += new System.EventHandler(this.cbChannel_SelectedIndexChanged);
+            // 
             // FormOscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(818, 516);
+            this.Controls.Add(this.cbChannel);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.mainGraph);
             this.Name = "FormOscilloscope";
@@ -74,6 +92,7 @@
 
         private SharpGL.OpenGLControl mainGraph;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.ComboBox cbChannel;
     }
 }
 

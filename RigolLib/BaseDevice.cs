@@ -11,12 +11,16 @@ namespace RigolLib
         private readonly ResourceManager resourceManager;
         private MessageBasedSession session = null;
 
+        public readonly string Idendity;
+
         protected readonly object communiationLock = new object();
 
         internal BaseDevice(ResourceManager resourceManager, string resource)
         {
             this.resource = resource;
             this.resourceManager = resourceManager;
+
+            this.Idendity = GetSession().Query("*IDN?");
         }
         
             

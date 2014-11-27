@@ -4,6 +4,8 @@ namespace RigolLib
 {
     public class Waveform
     {
+        public static readonly Waveform EMPTY = new Waveform("", "", new Point[0]);
+
         public readonly string XUnit, YUnit;
         public readonly Point[] Points;
 

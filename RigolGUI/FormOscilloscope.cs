@@ -1,5 +1,6 @@
 ﻿using RigolLib;
 using SharpGL;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
@@ -9,27 +10,27 @@ namespace RigolGUI
     public partial class FormOscilloscope : Form
     {
         private readonly Oscilloscope oscilloscope;
-        private volatile Waveform waveform;
+        private volatile Waveform waveform = Waveform.EMPTY;
         private readonly object waveformLock = new object();
 
         public FormOscilloscope(Oscilloscope oscilloscope)
         {
             this.oscilloscope = oscilloscope;
 
-            RefreshWaveformData();
-
             InitializeComponent();
+
+            this.cbChannel.SelectedIndex = 0;
+
+            this.Text = "Oscilloscope (" + oscilloscope.Idendity + ")";
+
+            RefreshWaveformData(false);
 
             new Thread(WaveformThread).Start();
         }
 
-        private void RefreshWaveformData()
+        private void RefreshWaveformData(bool fast = true)
         {
-            Waveform newWaveform = oscilloscope.GetWaveform(1, false, false);
-            lock (waveformLock)
-            {
-                this.waveform = newWaveform;
-            }
+            oscilloscope.SetWaveformConfig(cbChannel.Text, false, false, fast);
         }
 
         private void WaveformThread()
@@ -42,6 +43,7 @@ namespace RigolGUI
                 }
 
                 Waveform newWaveform = oscilloscope.QueryWaveform();
+
                 lock (waveformLock)
                 {
                     this.waveform = newWaveform;
@@ -82,6 +84,11 @@ namespace RigolGUI
         }
 
         private void btnRefresh_Click(object sender, System.EventArgs e)
+        {
+            RefreshWaveformData();
+        }
+
+        private void cbChannel_SelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshWaveformData();
         }
