@@ -3,23 +3,15 @@ using System;
 
 namespace RigolLib
 {
-    public class Oscilloscope : IDisposable
+    public class Oscilloscope : BaseDevice, IDisposable
     {
-        private readonly string resource;
-        private readonly ResourceManager resourceManager;
-        private MessageBasedSession session = null;
-
         const double NUMBER_HORIZONTAL_SCALES = 12; // MSO1000Z/DS1000Z
-
-        internal Oscilloscope(ResourceManager resourceManager, string resource)
-        {
-            this.resource = resource;
-            this.resourceManager = resourceManager;
-        }
 
         double xincrement, xorigin, xreference, yincrement, yorigin, yreference;
         bool raw;
         long mdepth;
+
+        internal Oscilloscope(ResourceManager resourceManager, string resource) : base(resourceManager, resource) { }
 
         public Waveform GetWaveform(int channel, bool raw)
         {
@@ -27,7 +19,6 @@ namespace RigolLib
             SendCommand(":WAV:SOURce CHAN" + channel);
 
             string mdepthStr = QueryString(":ACQuire:MDEPth?");
-            Console.Out.WriteLine(QueryString(":TIMebase:MAIN:SCALe?"));
             if (mdepthStr == "AUTO")
                 mdepth = (long)(QueryScientific(":ACQuire:SRATe?") * QueryScientific(":TIMebase:MAIN:SCALe?") * NUMBER_HORIZONTAL_SCALES);
             else
@@ -101,45 +92,6 @@ namespace RigolLib
             }
 
             return waveform;
-        }
-
-        private MessageBasedSession GetSession()
-        {
-            if (session == null)
-                session = (MessageBasedSession)resourceManager.Open(resource);
-            session.DefaultBufferSize = 1000000 + 8192;
-            return session;
-        }
-
-        public void Dispose()
-        {
-            if (session != null)
-                session.Dispose();
-        }
-
-        private void SendCommand(string command)
-        {
-            GetSession().Write(command);
-        }
-
-        private string QueryString(string query)
-        {
-            return GetSession().Query(query).Trim();
-        }
-
-        private byte[] QueryBytes(string query)
-        {
-            return GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query));
-        }
-
-        private double ParseScientific(string arg)
-        {
-            return Double.Parse(arg, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        private double QueryScientific(string query)
-        {
-            return ParseScientific(QueryString(query));
         }
     }
 }
