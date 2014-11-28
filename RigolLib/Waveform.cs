@@ -16,7 +16,7 @@ namespace RigolLib
             public readonly double RawX;
             public readonly double RawY;
 
-            internal Point(double x, double y, double rawX, double rawY)
+            public Point(double x, double y, double rawX, double rawY)
             {
                 X = x;
                 Y = y;
@@ -25,7 +25,7 @@ namespace RigolLib
             }
         }
 
-        internal Waveform(string xunit, string yunit, Point[] points)
+        public Waveform(string xunit, string yunit, Point[] points)
         {
             XUnit = xunit;
             YUnit = yunit;

@@ -31,7 +31,9 @@
             this.mainGraph = new SharpGL.OpenGLControl();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.cbChannel = new System.Windows.Forms.ComboBox();
+            this.fftGraph = new SharpGL.OpenGLControl();
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).BeginInit();
             this.SuspendLayout();
             // 
             // mainGraph
@@ -73,17 +75,32 @@
             this.cbChannel.TabIndex = 4;
             this.cbChannel.SelectedIndexChanged += new System.EventHandler(this.cbChannel_SelectedIndexChanged);
             // 
+            // fftGraph
+            // 
+            this.fftGraph.DrawFPS = false;
+            this.fftGraph.Location = new System.Drawing.Point(12, 298);
+            this.fftGraph.Name = "fftGraph";
+            this.fftGraph.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL2_1;
+            this.fftGraph.RenderContextType = SharpGL.RenderContextType.DIBSection;
+            this.fftGraph.RenderTrigger = SharpGL.RenderTrigger.TimerBased;
+            this.fftGraph.Size = new System.Drawing.Size(616, 237);
+            this.fftGraph.TabIndex = 5;
+            this.fftGraph.TabStop = false;
+            this.fftGraph.OpenGLDraw += new SharpGL.RenderEventHandler(this.fttGraph_OpenGLDraw);
+            // 
             // FormOscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(818, 516);
+            this.ClientSize = new System.Drawing.Size(852, 591);
+            this.Controls.Add(this.fftGraph);
             this.Controls.Add(this.cbChannel);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.mainGraph);
             this.Name = "FormOscilloscope";
             this.Text = "Oscilloscope";
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -93,6 +110,7 @@
         private SharpGL.OpenGLControl mainGraph;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.ComboBox cbChannel;
+        private SharpGL.OpenGLControl fftGraph;
     }
 }
 
