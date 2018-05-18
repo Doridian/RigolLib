@@ -28,17 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.mainGraph = new SharpGL.OpenGLControl();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.cbChannel = new System.Windows.Forms.ComboBox();
             this.fftGraph = new SharpGL.OpenGLControl();
+            this.tmRefresh = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).BeginInit();
             this.SuspendLayout();
             // 
             // mainGraph
             // 
-            this.mainGraph.DrawFPS = false;
+            this.mainGraph.DrawFPS = true;
+            this.mainGraph.FrameRate = 60;
             this.mainGraph.Location = new System.Drawing.Point(12, 55);
             this.mainGraph.Name = "mainGraph";
             this.mainGraph.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL2_1;
@@ -78,6 +81,7 @@
             // fftGraph
             // 
             this.fftGraph.DrawFPS = false;
+            this.fftGraph.FrameRate = 60;
             this.fftGraph.Location = new System.Drawing.Point(12, 298);
             this.fftGraph.Name = "fftGraph";
             this.fftGraph.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL2_1;
@@ -87,6 +91,11 @@
             this.fftGraph.TabIndex = 5;
             this.fftGraph.TabStop = false;
             this.fftGraph.OpenGLDraw += new SharpGL.RenderEventHandler(this.fttGraph_OpenGLDraw);
+            // 
+            // tmRefresh
+            // 
+            this.tmRefresh.Enabled = true;
+            this.tmRefresh.Tick += new System.EventHandler(this.tmRefresh_Tick);
             // 
             // FormOscilloscope
             // 
@@ -111,6 +120,7 @@
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.ComboBox cbChannel;
         private SharpGL.OpenGLControl fftGraph;
+        private System.Windows.Forms.Timer tmRefresh;
     }
 }
 

@@ -1,4 +1,4 @@
-﻿using NationalInstruments.VisaNS;
+﻿using NationalInstruments.Visa;
 
 namespace RigolLib.Oscilloscopes
 {

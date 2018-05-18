@@ -1,4 +1,4 @@
-﻿using NationalInstruments.VisaNS;
+﻿using NationalInstruments.Visa;
 using System;
 using System.Collections.Generic;
 
@@ -6,7 +6,7 @@ namespace RigolLib
 {
     public class Oscilloscope : BaseDevice
     {
-        const int WAV_DATA_X_START = 11;
+        //const int WAV_DATA_X_START = 0;
         const int MAX_WAVEFORM_QUERY_SIZE = 1000000;
 
         readonly double horizontalScales; // MSO1000Z/DS1000Z
@@ -75,22 +75,23 @@ namespace RigolLib
         private long AddWaveformData(List<Waveform.Point> points, long offset, int waveformSize)
         {
             byte[] wavData = QueryBytes(":WAV:DATA?", waveformSize + BaseDevice.DEFAULT_BUFFER_SIZE);
+            if (wavData == null)
+            {
+                throw new NullReferenceException();
+            }
 
-            long wavDataLength = long.Parse(System.Text.Encoding.ASCII.GetString(wavData, 2, 9));
-
-            //Skip first 11 bytes, those are info data
-            for (long x = WAV_DATA_X_START; x < wavDataLength + WAV_DATA_X_START; x++)
+            for (long x = 0; x < wavData.Length; x++)
             {
                 double y = wavData[x];
                 points.Add(new Waveform.Point(
-                    (((double)(x - WAV_DATA_X_START + offset)) - xorigin - xreference) * xincrement,
+                    (((double)(x + offset)) - xorigin - xreference) * xincrement,
                     (y - yorigin - yreference) * yincrement,
                     x,
                     y
                 ));
             }
 
-            return wavDataLength;
+            return wavData.Length;
         }
 
         public Waveform QueryWaveform()

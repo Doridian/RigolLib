@@ -1,4 +1,4 @@
-﻿using NationalInstruments.VisaNS;
+﻿using NationalInstruments.Visa;
 using System;
 
 namespace RigolLib
@@ -15,12 +15,48 @@ namespace RigolLib
 
         protected readonly object communiationLock = new object();
 
+        protected string QuerySession(string query, int bufferSize = -1)
+        {
+            if (bufferSize > 0)
+            {
+                session.FormattedIO.WriteBufferSize = bufferSize;
+                session.FormattedIO.ReadBufferSize = bufferSize;
+            }
+            var io = GetSession().FormattedIO;
+            io.WriteLine(query);
+            var res = io.ReadLine();
+            if (bufferSize > 0)
+            {
+                io.WriteBufferSize = DEFAULT_BUFFER_SIZE;
+                io.ReadBufferSize = DEFAULT_BUFFER_SIZE;
+            }
+            return res;
+        }
+
+        protected byte[] QuerySessionBytes(string query, int bufferSize = -1)
+        {
+            var io = GetSession().FormattedIO;
+            if (bufferSize > 0)
+            {
+                io.WriteBufferSize = bufferSize;
+                io.ReadBufferSize = bufferSize;
+            }
+            io.WriteLine(query);
+            var res = io.ReadLineBinaryBlockOfByte();
+            if (bufferSize > 0)
+            {
+                io.WriteBufferSize = DEFAULT_BUFFER_SIZE;
+                io.ReadBufferSize = DEFAULT_BUFFER_SIZE;
+            }
+            return res;
+        }
+
         internal BaseDevice(ResourceManager resourceManager, string resource)
         {
             this.resource = resource;
             this.resourceManager = resourceManager;
 
-            this.Idendity = GetSession().Query("*IDN?");
+            this.Idendity = QuerySession("*IDN?");
         }
         
             
@@ -28,7 +64,8 @@ namespace RigolLib
         {
             if (session == null)
                 session = (MessageBasedSession)resourceManager.Open(resource);
-            session.DefaultBufferSize = DEFAULT_BUFFER_SIZE;
+            session.FormattedIO.WriteBufferSize = DEFAULT_BUFFER_SIZE;
+            session.FormattedIO.ReadBufferSize = DEFAULT_BUFFER_SIZE;
             return session;
         }
 
@@ -42,7 +79,7 @@ namespace RigolLib
         {
             lock (communiationLock)
             {
-                GetSession().Write(command);
+                GetSession().FormattedIO.WriteLine(command);
             }
         }
 
@@ -51,21 +88,17 @@ namespace RigolLib
             string ret;
             lock (communiationLock)
             {
-                ret = GetSession().Query(query, bufferSize);
+                ret = QuerySession(query, bufferSize);
             }
             return ret.Remove(ret.Length - 1);
         }
 
         protected byte[] QueryBytes(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
-            byte[] response;
             lock (communiationLock)
             {
-                response = GetSession().Query(System.Text.Encoding.ASCII.GetBytes(query), bufferSize);
+                return QuerySessionBytes(query, bufferSize);
             }
-            byte[] ret = new byte[response.Length - 1];
-            Buffer.BlockCopy(response, 0, ret, 0, ret.Length);
-            return ret;
         }
 
         protected double ParseScientific(string arg)

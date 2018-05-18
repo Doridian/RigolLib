@@ -2,8 +2,6 @@
 using RigolLib;
 using SharpGL;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -19,6 +17,8 @@ namespace RigolGUI
 
         private volatile Waveform fftWaveform = Waveform.EMPTY;
         private readonly object fftWaveformLock = new object();
+
+        private double fps = 0;
 
         public FormOscilloscope(Oscilloscope oscilloscope)
         {
@@ -49,7 +49,17 @@ namespace RigolGUI
                     continue;
                 }
 
-                Waveform newWaveform = oscilloscope.QueryWaveform();
+                DateTime start = DateTime.UtcNow;
+
+                Waveform newWaveform;
+                try
+                {
+                    newWaveform = oscilloscope.QueryWaveform();
+                }
+                catch
+                {
+                    continue;
+                }
 
                 lock (waveformLock)
                 {
@@ -57,6 +67,8 @@ namespace RigolGUI
                 }
 
                 PerformFFT();
+
+                fps = 1000D / (DateTime.UtcNow - start).TotalMilliseconds;
             }
         }
 
@@ -153,6 +165,11 @@ namespace RigolGUI
         private void btnRefresh_Click(object sender, System.EventArgs e)
         {
             RefreshWaveformData();
+        }
+
+        private void tmRefresh_Tick(object sender, EventArgs e)
+        {
+            this.Text = "Oscilloscope (" + oscilloscope.Idendity + ") [" + fps + " fps]";
         }
 
         private void cbChannel_SelectedIndexChanged(object sender, EventArgs e)

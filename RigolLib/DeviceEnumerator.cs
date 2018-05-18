@@ -1,4 +1,4 @@
-﻿using NationalInstruments.VisaNS;
+﻿using NationalInstruments.Visa;
 using System;
 using System.Collections.Generic;
 
@@ -8,12 +8,11 @@ namespace RigolLib
     {
         public static IEnumerable<Oscilloscope> FindScopes()
         {
-            ResourceManager resourceManager = ResourceManager.GetLocalManager();
+            ResourceManager resourceManager = new ResourceManager();
 
             List<Oscilloscope> scopes = new List<Oscilloscope>();
 
-            string[] resources = resourceManager.FindResources("?*INSTR");
-            foreach (string resource in resources)
+            foreach (string resource in resourceManager.Find("?*INSTR"))
             {
                 if (resource.StartsWith("USB") || resource.StartsWith("LAN") || resource.StartsWith("TCP"))
                 {
@@ -21,14 +20,24 @@ namespace RigolLib
                     {
                         using (MessageBasedSession session = (MessageBasedSession)resourceManager.Open(resource))
                         {
-                            string[] info = session.Query("*IDN?").Split(',');
+                            session.FormattedIO.WriteLine("*IDN?");
+                            string[] info = session.FormattedIO.ReadLine().Split(',');
                             if (info[0] != "RIGOL TECHNOLOGIES")
                                 break;
                             switch (info[1])
                             {
+                                case "DS110Z-S":
+                                case "DS1074Z-S":
+                                case "DS1054Z-S":
                                 case "DS1104Z":
                                 case "DS1074Z":
                                 case "DS1054Z":
+                                case "MSO110Z-S":
+                                case "MSO1074Z-S":
+                                case "MSO1054Z-S":
+                                case "MSO1104Z":
+                                case "MSO1074Z":
+                                case "MSO1054Z":
                                     scopes.Add(new Oscilloscopes.DS1000Z(resourceManager, resource));
                                     break;
                             }
