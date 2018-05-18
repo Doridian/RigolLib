@@ -40,7 +40,7 @@
             // 
             // mainGraph
             // 
-            this.mainGraph.DrawFPS = true;
+            this.mainGraph.DrawFPS = false;
             this.mainGraph.FrameRate = 60;
             this.mainGraph.Location = new System.Drawing.Point(12, 55);
             this.mainGraph.Name = "mainGraph";
