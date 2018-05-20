@@ -35,6 +35,11 @@
             this.fftGraph = new SharpGL.OpenGLControl();
             this.tmRefresh = new System.Windows.Forms.Timer(this.components);
             this.lblWaveformFPS = new System.Windows.Forms.Label();
+            this.cbChan1 = new System.Windows.Forms.CheckBox();
+            this.cbChan2 = new System.Windows.Forms.CheckBox();
+            this.cbChan3 = new System.Windows.Forms.CheckBox();
+            this.cbChan4 = new System.Windows.Forms.CheckBox();
+            this.cbMath = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).BeginInit();
             this.SuspendLayout();
@@ -107,11 +112,66 @@
             this.lblWaveformFPS.TabIndex = 6;
             this.lblWaveformFPS.Text = "label1";
             // 
+            // cbChan1
+            // 
+            this.cbChan1.AutoSize = true;
+            this.cbChan1.Location = new System.Drawing.Point(637, 85);
+            this.cbChan1.Name = "cbChan1";
+            this.cbChan1.Size = new System.Drawing.Size(74, 17);
+            this.cbChan1.TabIndex = 7;
+            this.cbChan1.Text = "Channel 1";
+            this.cbChan1.UseVisualStyleBackColor = true;
+            // 
+            // cbChan2
+            // 
+            this.cbChan2.AutoSize = true;
+            this.cbChan2.Location = new System.Drawing.Point(635, 109);
+            this.cbChan2.Name = "cbChan2";
+            this.cbChan2.Size = new System.Drawing.Size(74, 17);
+            this.cbChan2.TabIndex = 8;
+            this.cbChan2.Text = "Channel 2";
+            this.cbChan2.UseVisualStyleBackColor = true;
+            // 
+            // cbChan3
+            // 
+            this.cbChan3.AutoSize = true;
+            this.cbChan3.Location = new System.Drawing.Point(635, 133);
+            this.cbChan3.Name = "cbChan3";
+            this.cbChan3.Size = new System.Drawing.Size(74, 17);
+            this.cbChan3.TabIndex = 9;
+            this.cbChan3.Text = "Channel 3";
+            this.cbChan3.UseVisualStyleBackColor = true;
+            // 
+            // cbChan4
+            // 
+            this.cbChan4.AutoSize = true;
+            this.cbChan4.Location = new System.Drawing.Point(635, 157);
+            this.cbChan4.Name = "cbChan4";
+            this.cbChan4.Size = new System.Drawing.Size(74, 17);
+            this.cbChan4.TabIndex = 10;
+            this.cbChan4.Text = "Channel 4";
+            this.cbChan4.UseVisualStyleBackColor = true;
+            // 
+            // cbMath
+            // 
+            this.cbMath.AutoSize = true;
+            this.cbMath.Location = new System.Drawing.Point(634, 180);
+            this.cbMath.Name = "cbMath";
+            this.cbMath.Size = new System.Drawing.Size(50, 17);
+            this.cbMath.TabIndex = 11;
+            this.cbMath.Text = "Math";
+            this.cbMath.UseVisualStyleBackColor = true;
+            // 
             // FormOscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(852, 591);
+            this.Controls.Add(this.cbMath);
+            this.Controls.Add(this.cbChan4);
+            this.Controls.Add(this.cbChan3);
+            this.Controls.Add(this.cbChan2);
+            this.Controls.Add(this.cbChan1);
             this.Controls.Add(this.lblWaveformFPS);
             this.Controls.Add(this.fftGraph);
             this.Controls.Add(this.cbChannel);
@@ -135,6 +195,11 @@
         private SharpGL.OpenGLControl fftGraph;
         private System.Windows.Forms.Timer tmRefresh;
         private System.Windows.Forms.Label lblWaveformFPS;
+        private System.Windows.Forms.CheckBox cbChan1;
+        private System.Windows.Forms.CheckBox cbChan2;
+        private System.Windows.Forms.CheckBox cbChan3;
+        private System.Windows.Forms.CheckBox cbChan4;
+        private System.Windows.Forms.CheckBox cbMath;
     }
 }
 

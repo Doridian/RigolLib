@@ -52,12 +52,28 @@ namespace RigolGUI
 
                 try
                 {
-                    waveforms = new Waveform[] {
-                        oscilloscope.QueryWaveform("CHAN1"),
-                        oscilloscope.QueryWaveform("CHAN2"),
-                        oscilloscope.QueryWaveform("CHAN3"),
-                        oscilloscope.QueryWaveform("CHAN4"),
-                    };
+                    List<Waveform> tmpWaveforms = new List<Waveform>();
+                    if (cbChan1.Checked)
+                    {
+                        tmpWaveforms.Add(oscilloscope.QueryWaveform("CHAN1"));
+                    }
+                    if (cbChan2.Checked)
+                    {
+                        tmpWaveforms.Add(oscilloscope.QueryWaveform("CHAN2"));
+                    }
+                    if (cbChan3.Checked)
+                    {
+                        tmpWaveforms.Add(oscilloscope.QueryWaveform("CHAN3"));
+                    }
+                    if (cbChan4.Checked)
+                    {
+                        tmpWaveforms.Add(oscilloscope.QueryWaveform("CHAN4"));
+                    }
+                    if (cbMath.Checked)
+                    {
+                        tmpWaveforms.Add(oscilloscope.QueryWaveform("MATH"));
+                    }
+                    waveforms = tmpWaveforms;
                 }
                 catch
                 {
@@ -153,22 +169,24 @@ namespace RigolGUI
             gl.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 
-            int lastPointLength = -1;
+            int maxPointsLength = 0;
             foreach (Waveform waveform in waveforms)
             {
-                Waveform.Point[] points = waveform.Points;
-
-                if (lastPointLength != points.Length)
+                if (waveform.Points.Length > maxPointsLength)
                 {
-                    lastPointLength = points.Length;
-                    gl.Ortho2D(0, points.Length, 0, 255);
-                    gl.Viewport(0, 0, mainGraph.Width, mainGraph.Height);
+                    maxPointsLength = waveform.Points.Length;
                 }
+            }
 
+            gl.Ortho2D(0, maxPointsLength, 0, 255);
+            gl.Viewport(0, 0, mainGraph.Width, mainGraph.Height);
+
+            foreach (Waveform waveform in waveforms)
+            {
                 gl.Begin(OpenGL.GL_LINE_STRIP);
                 gl.Color(waveform.R, waveform.G, waveform.B, 0.9f);
 
-                foreach (Waveform.Point point in points)
+                foreach (Waveform.Point point in waveform.Points)
                 {
                     gl.Vertex(point.RawX, point.RawY);
                 }

@@ -57,7 +57,7 @@ namespace RigolLib
                     B = 1.0f;
                     break;
                 case "MATH":
-                    R = 1.0f;
+                    R = 0.5f;
                     G = 0.0f;
                     B = 1.0f;
                     break;
