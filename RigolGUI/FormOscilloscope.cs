@@ -2,6 +2,7 @@
 using RigolLib;
 using SharpGL;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -12,8 +13,7 @@ namespace RigolGUI
     {
         private readonly Oscilloscope oscilloscope;
 
-        private volatile Waveform waveform = Waveform.EMPTY;
-        private readonly object waveformLock = new object();
+        private volatile IEnumerable<Waveform> waveforms = new Waveform[] { };
 
         private volatile Waveform fftWaveform = Waveform.EMPTY;
         private readonly object fftWaveformLock = new object();
@@ -26,9 +26,9 @@ namespace RigolGUI
 
             InitializeComponent();
 
-            this.cbChannel.SelectedIndex = 0;
+            cbChannel.SelectedIndex = 0;
 
-            this.Text = "Oscilloscope (" + oscilloscope.Idendity + ")";
+            Text = "Oscilloscope (" + oscilloscope.Idendity + ")";
 
             RefreshWaveformData(false);
 
@@ -51,24 +51,29 @@ namespace RigolGUI
 
                 DateTime start = DateTime.UtcNow;
 
-                Waveform newWaveform;
                 try
                 {
-                    newWaveform = oscilloscope.QueryWaveform();
+                    waveforms = new Waveform[] {
+                        oscilloscope.QueryWaveform("CHAN1"),
+                        oscilloscope.QueryWaveform("CHAN2"),
+                        oscilloscope.QueryWaveform("CHAN3"),
+                        oscilloscope.QueryWaveform("CHAN4"),
+                    };
                 }
                 catch
                 {
                     continue;
                 }
 
-                lock (waveformLock)
+                //PerformFFT();
+
+                double millis = (DateTime.UtcNow - start).TotalMilliseconds;
+                fps = 1000D / millis;
+                if (fps > 60)
                 {
-                    this.waveform = newWaveform;
+                    fps = 60;
+                    Thread.Sleep((int)((1000D / 60D) - millis));
                 }
-
-                PerformFFT();
-
-                fps = 1000D / (DateTime.UtcNow - start).TotalMilliseconds;
             }
         }
 
@@ -100,7 +105,7 @@ namespace RigolGUI
             if (fftPlan == IntPtr.Zero)
                 InitFFT(1200);
 
-            Waveform.Point[] points = this.waveform.Points;
+            Waveform.Point[] points = this.waveforms.GetEnumerator().Current.Points;
 
             if (points.Length != 1200)
                 return;
@@ -125,11 +130,11 @@ namespace RigolGUI
                     fftPoints[x] = new Waveform.Point(x, y, x, y);
                 }
 
-                fftWaveform = new Waveform("Hz", "V", fftPoints);
+                fftWaveform = new Waveform("Hz", "V", fftPoints, 1.0f, 0.0f, 1.0f);
             }
         }
 
-        private void RenderWaveform(Waveform waveform, OpenGLControl openGLControl)
+        private void RenderWaveform(IEnumerable<Waveform> waveforms, OpenGLControl openGLControl)
         {
             OpenGL gl = openGLControl.OpenGL;
 
@@ -139,27 +144,35 @@ namespace RigolGUI
             gl.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 
-            Waveform.Point[] points = waveform.Points;
-
-            gl.Ortho2D(0, points.Length, 0, 255);
-            gl.Viewport(0, 0, mainGraph.Width, mainGraph.Height);
-
-            gl.Begin(OpenGL.GL_LINE_STRIP);
-            gl.Color(1.0f, 0.0f, 0.0f);
-
-            foreach (Waveform.Point point in points)
+            int lastPointLength = -1;
+            foreach (Waveform waveform in waveforms)
             {
-                gl.Vertex(point.RawX, point.RawY);
-            }
+                Waveform.Point[] points = waveform.Points;
 
-            gl.End();
+                if (lastPointLength != points.Length)
+                {
+                    lastPointLength = points.Length;
+                    gl.Ortho2D(0, points.Length, 0, 255);
+                    gl.Viewport(0, 0, mainGraph.Width, mainGraph.Height);
+                }
+
+                gl.Begin(OpenGL.GL_LINE_STRIP);
+                gl.Color(waveform.R, waveform.G, waveform.B);
+
+                foreach (Waveform.Point point in points)
+                {
+                    gl.Vertex(point.RawX, point.RawY);
+                }
+
+                gl.End();
+            }
 
             gl.Flush();
         }
 
         private void mainGraph_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
         {
-            RenderWaveform(waveform, mainGraph);
+            RenderWaveform(waveforms, mainGraph);
         }
 
         private void btnRefresh_Click(object sender, System.EventArgs e)
@@ -169,7 +182,12 @@ namespace RigolGUI
 
         private void tmRefresh_Tick(object sender, EventArgs e)
         {
-            this.Text = "Oscilloscope (" + oscilloscope.Idendity + ") [" + fps + " fps]";
+            lblWaveformFPS.Text =  fps + " fps";
+        }
+
+        private void FormOscilloscope_Load(object sender, EventArgs e)
+        {
+
         }
 
         private void cbChannel_SelectedIndexChanged(object sender, EventArgs e)
@@ -179,7 +197,7 @@ namespace RigolGUI
 
         private void fttGraph_OpenGLDraw(object sender, RenderEventArgs args)
         {
-            RenderWaveform(fftWaveform, fftGraph);
+            //RenderWaveform(fftWaveform, fftGraph);
         }
     }
 }

@@ -95,10 +95,12 @@ namespace RigolLib
 
         protected byte[] QueryBytes(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
         {
+            byte[] ret;
             lock (communiationLock)
             {
-                return QuerySessionBytes(query, bufferSize);
+                ret = QuerySessionBytes(query, bufferSize);
             }
+            return ret;
         }
 
         protected double ParseScientific(string arg)

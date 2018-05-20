@@ -34,6 +34,7 @@
             this.cbChannel = new System.Windows.Forms.ComboBox();
             this.fftGraph = new SharpGL.OpenGLControl();
             this.tmRefresh = new System.Windows.Forms.Timer(this.components);
+            this.lblWaveformFPS = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).BeginInit();
             this.SuspendLayout();
@@ -97,20 +98,32 @@
             this.tmRefresh.Enabled = true;
             this.tmRefresh.Tick += new System.EventHandler(this.tmRefresh_Tick);
             // 
+            // lblWaveformFPS
+            // 
+            this.lblWaveformFPS.AutoSize = true;
+            this.lblWaveformFPS.Location = new System.Drawing.Point(634, 55);
+            this.lblWaveformFPS.Name = "lblWaveformFPS";
+            this.lblWaveformFPS.Size = new System.Drawing.Size(35, 13);
+            this.lblWaveformFPS.TabIndex = 6;
+            this.lblWaveformFPS.Text = "label1";
+            // 
             // FormOscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(852, 591);
+            this.Controls.Add(this.lblWaveformFPS);
             this.Controls.Add(this.fftGraph);
             this.Controls.Add(this.cbChannel);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.mainGraph);
             this.Name = "FormOscilloscope";
             this.Text = "Oscilloscope";
+            this.Load += new System.EventHandler(this.FormOscilloscope_Load);
             ((System.ComponentModel.ISupportInitialize)(this.mainGraph)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.fftGraph)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -121,6 +134,7 @@
         private System.Windows.Forms.ComboBox cbChannel;
         private SharpGL.OpenGLControl fftGraph;
         private System.Windows.Forms.Timer tmRefresh;
+        private System.Windows.Forms.Label lblWaveformFPS;
     }
 }
 

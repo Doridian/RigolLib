@@ -6,7 +6,6 @@ namespace RigolLib
 {
     public class Oscilloscope : BaseDevice
     {
-        //const int WAV_DATA_X_START = 0;
         const int MAX_WAVEFORM_QUERY_SIZE = 1000000;
 
         readonly double horizontalScales; // MSO1000Z/DS1000Z
@@ -35,9 +34,8 @@ namespace RigolLib
 
                 this.raw = raw;
                 this.single = single;
-
-                if (this.channel != channel || !fast)
-                    SendCommand(":WAV:SOURce " + channel);
+                this.channel = channel;
+                SendCommand(":WAV:SOURce " + channel);
 
                 if (!fast)
                 {
@@ -94,17 +92,25 @@ namespace RigolLib
             return wavData.Length;
         }
 
-        public Waveform QueryWaveform()
+        public Waveform QueryWaveform(string useChannel)
         {
             List<Waveform.Point> points = new List<Waveform.Point>();
 
             lock (communiationLock)
             {
+                if (channel != useChannel && useChannel != null)
+                {
+                    channel = useChannel;
+                    SendCommand(":WAV:SOURce " + useChannel);
+                }
+
                 if (raw)
                 {
                     SendCommand(":STOP");
                     if (single)
+                    {
                         SendCommand(":SINGle");
+                    }
 
                     long currentPos = 0;
                     while (currentPos < mdepth)
@@ -119,12 +125,14 @@ namespace RigolLib
                 else
                 {
                     if (single)
+                    {
                         SendCommand(":SINGle");
+                    }
                     AddWaveformData(points, 0, 1200);
                 }
             }
 
-            return new Waveform("s", "V", points.ToArray());
+            return new Waveform("s", "V", points.ToArray(), useChannel);
         }
     }
 }
