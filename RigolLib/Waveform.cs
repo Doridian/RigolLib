@@ -11,6 +11,7 @@ namespace RigolLib
         public readonly Point[] Points;
 
         public readonly float R, G, B;
+        public readonly string Channel;
 
         public class Point
         {
@@ -64,6 +65,7 @@ namespace RigolLib
                     Console.Error.WriteLine("Channel " + channel);
                     break;
             }
+            Channel = channel;
         }
 
         public Waveform(string xunit, string yunit, Point[] points, float r, float g, float b)
@@ -74,6 +76,7 @@ namespace RigolLib
             R = r;
             G = g;
             B = b;
+            Channel = "N/A";
         }
     }
 }

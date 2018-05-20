@@ -15,8 +15,7 @@ namespace RigolGUI
 
         private volatile IEnumerable<Waveform> waveforms = new Waveform[] { };
 
-        private volatile Waveform fftWaveform = Waveform.EMPTY;
-        private readonly object fftWaveformLock = new object();
+        private volatile IEnumerable<Waveform> fftWaveforms = new Waveform[] { };
 
         private double fps = 0;
 
@@ -65,7 +64,7 @@ namespace RigolGUI
                     continue;
                 }
 
-                //PerformFFT();
+                PerformFFT();
 
                 double millis = (DateTime.UtcNow - start).TotalMilliseconds;
                 fps = 1000D / millis;
@@ -103,15 +102,20 @@ namespace RigolGUI
         private void PerformFFT()
         {
             if (fftPlan == IntPtr.Zero)
-                InitFFT(1200);
-
-            Waveform.Point[] points = this.waveforms.GetEnumerator().Current.Points;
-
-            if (points.Length != 1200)
-                return;
-
-            lock(fftWaveformLock)
             {
+                InitFFT(1200);
+            }
+
+            List<Waveform> fftTmp = new List<Waveform>();
+            foreach (Waveform waveform in waveforms)
+            {
+                Waveform.Point[] points = waveform.Points;
+
+                if (points.Length != 1200)
+                {
+                    continue;
+                }
+
                 for (int x = 0; x < 1200; x++)
                 {
                     fftIn[x * 2 + 1] = 0;
@@ -130,13 +134,18 @@ namespace RigolGUI
                     fftPoints[x] = new Waveform.Point(x, y, x, y);
                 }
 
-                fftWaveform = new Waveform("Hz", "V", fftPoints, 1.0f, 0.0f, 1.0f);
+                fftTmp.Add(new Waveform("Hz", "V", fftPoints, waveform.Channel));
             }
+
+            fftWaveforms = fftTmp;
         }
 
         private void RenderWaveform(IEnumerable<Waveform> waveforms, OpenGLControl openGLControl)
         {
             OpenGL gl = openGLControl.OpenGL;
+
+            gl.Enable(OpenGL.GL_BLEND);
+            gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 
             gl.MatrixMode(OpenGL.GL_PROJECTION);
             gl.LoadIdentity();
@@ -157,7 +166,7 @@ namespace RigolGUI
                 }
 
                 gl.Begin(OpenGL.GL_LINE_STRIP);
-                gl.Color(waveform.R, waveform.G, waveform.B);
+                gl.Color(waveform.R, waveform.G, waveform.B, 0.9f);
 
                 foreach (Waveform.Point point in points)
                 {
@@ -197,7 +206,7 @@ namespace RigolGUI
 
         private void fttGraph_OpenGLDraw(object sender, RenderEventArgs args)
         {
-            //RenderWaveform(fftWaveform, fftGraph);
+            RenderWaveform(fftWaveforms, fftGraph);
         }
     }
 }
