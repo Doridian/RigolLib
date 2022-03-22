@@ -1,5 +1,4 @@
-﻿using NationalInstruments.Visa;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace RigolLib
@@ -15,7 +14,7 @@ namespace RigolLib
         long mdepth;
         string channel = "";
 
-        internal Oscilloscope(ResourceManager resourceManager, string resource, int horizontalScales) : base(resourceManager, resource)
+        internal Oscilloscope(string ip, int port, int horizontalScales) : base(ip, port)
         {
             this.horizontalScales = horizontalScales;
         }
@@ -72,7 +71,7 @@ namespace RigolLib
 
         private long AddWaveformData(List<Waveform.Point> points, long offset, int waveformSize)
         {
-            byte[] wavData = QueryBytes(":WAV:DATA?", waveformSize + BaseDevice.DEFAULT_BUFFER_SIZE);
+            byte[] wavData = QueryBytes(":WAV:DATA?", waveformSize);
             if (wavData == null)
             {
                 throw new NullReferenceException();

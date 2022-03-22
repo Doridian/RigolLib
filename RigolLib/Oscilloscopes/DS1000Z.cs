@@ -1,9 +1,7 @@
-﻿using NationalInstruments.Visa;
-
-namespace RigolLib.Oscilloscopes
+﻿namespace RigolLib.Oscilloscopes
 {
     public class DS1000Z : Oscilloscope
     {
-        internal DS1000Z(ResourceManager resourceManager, string resource) : base(resourceManager, resource, 12) { }
+        public DS1000Z(string ip, int port) : base(ip, port, 12) { }
     }
 }

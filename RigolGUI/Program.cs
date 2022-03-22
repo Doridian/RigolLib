@@ -1,6 +1,5 @@
-﻿using RigolLib;
+﻿using RigolLib.Oscilloscopes;
 using System;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace RigolGUI
@@ -15,7 +14,7 @@ namespace RigolGUI
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormOscilloscope(DeviceEnumerator.FindScopes().First()));
+            Application.Run(new FormOscilloscope(new DS1000Z("1.3.3.7", 5555)));
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using NationalInstruments.Visa;
-using System;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
 
 namespace RigolLib
 {
@@ -7,98 +9,113 @@ namespace RigolLib
     {
         internal const int DEFAULT_BUFFER_SIZE = 2048;
 
-        private readonly string resource;
-        private readonly ResourceManager resourceManager;
-        private MessageBasedSession session = null;
+        private readonly IPEndPoint endPoint;
+        private TcpClient session = null;
+        private NetworkStream networkStream = null;
+        private StreamReader networkStreamReader = null;
+        private StreamWriter networkStreamWriter = null;
 
         public readonly string Idendity;
 
         protected readonly object communiationLock = new object();
 
-        protected string QuerySession(string query, int bufferSize = -1)
+        protected string QuerySession(string query)
         {
-            if (bufferSize > 0)
+            WriteLine(query);
+            return ReadLine();
+        }
+
+        protected byte[] QuerySessionBytes(string query, int len)
+        {
+            WriteLine(query);
+            byte[] res = new byte[len];
+            networkStreamReader.BaseStream.Read(res, 0, len);
+            if (networkStreamReader.Read() == 0x0a)
             {
-                session.FormattedIO.WriteBufferSize = bufferSize;
-                session.FormattedIO.ReadBufferSize = bufferSize;
-            }
-            var io = GetSession().FormattedIO;
-            io.WriteLine(query);
-            var res = io.ReadLine();
-            if (bufferSize > 0)
-            {
-                io.WriteBufferSize = DEFAULT_BUFFER_SIZE;
-                io.ReadBufferSize = DEFAULT_BUFFER_SIZE;
+                throw new Exception("Wrong line length on binary query");
             }
             return res;
         }
 
-        protected byte[] QuerySessionBytes(string query, int bufferSize = -1)
+        internal BaseDevice(string ip, int port)
         {
-            var io = GetSession().FormattedIO;
-            if (bufferSize > 0)
-            {
-                io.WriteBufferSize = bufferSize;
-                io.ReadBufferSize = bufferSize;
-            }
-            io.WriteLine(query);
-            var res = io.ReadLineBinaryBlockOfByte();
-            if (bufferSize > 0)
-            {
-                io.WriteBufferSize = DEFAULT_BUFFER_SIZE;
-                io.ReadBufferSize = DEFAULT_BUFFER_SIZE;
-            }
-            return res;
-        }
-
-        internal BaseDevice(ResourceManager resourceManager, string resource)
-        {
-            this.resource = resource;
-            this.resourceManager = resourceManager;
+            this.endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
 
             this.Idendity = QuerySession("*IDN?");
         }
         
             
-        protected MessageBasedSession GetSession()
+        protected void GetSession()
         {
             if (session == null)
-                session = (MessageBasedSession)resourceManager.Open(resource);
-            session.FormattedIO.WriteBufferSize = DEFAULT_BUFFER_SIZE;
-            session.FormattedIO.ReadBufferSize = DEFAULT_BUFFER_SIZE;
-            return session;
+            {
+                session = new TcpClient();
+                session.Connect(this.endPoint);
+                networkStream = session.GetStream();
+                networkStreamReader = new StreamReader(networkStream);
+                networkStreamWriter = new StreamWriter(networkStream);
+            }
+            session.ReceiveBufferSize = DEFAULT_BUFFER_SIZE;
+            session.SendBufferSize = DEFAULT_BUFFER_SIZE;
+        }
+
+        protected void WriteLine(string line)
+        {
+            GetSession();
+            networkStreamWriter.WriteLine(line);
+            networkStreamWriter.Flush();
+        }
+
+        protected string ReadLine()
+        {
+            GetSession();
+            return networkStreamReader.ReadLine();
         }
 
         public void Dispose()
         {
             if (session != null)
-                session.Dispose();
+            {
+                session.Close();
+            }
+            if (networkStream != null)
+            {
+                networkStream.Dispose();
+            }
+            if (networkStreamReader != null)
+            {
+                networkStreamReader.Dispose();
+            }
+            if (networkStreamWriter != null)
+            {
+                networkStreamWriter.Dispose();
+            }
         }
 
         protected void SendCommand(string command)
         {
             lock (communiationLock)
             {
-                GetSession().FormattedIO.WriteLine(command);
+                WriteLine(command);
             }
         }
 
-        protected string QueryString(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
+        protected string QueryString(string query)
         {
             string ret;
             lock (communiationLock)
             {
-                ret = QuerySession(query, bufferSize);
+                ret = QuerySession(query);
             }
-            return ret.Remove(ret.Length - 1);
+            return ret;
         }
 
-        protected byte[] QueryBytes(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
+        protected byte[] QueryBytes(string query, int length)
         {
             byte[] ret;
             lock (communiationLock)
             {
-                ret = QuerySessionBytes(query, bufferSize);
+                ret = QuerySessionBytes(query, length);
             }
             return ret;
         }
@@ -108,9 +125,9 @@ namespace RigolLib
             return Double.Parse(arg, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        protected double QueryScientific(string query, int bufferSize = DEFAULT_BUFFER_SIZE)
+        protected double QueryScientific(string query)
         {
-            return ParseScientific(QueryString(query, bufferSize));
+            return ParseScientific(QueryString(query));
         }
     }
 }
