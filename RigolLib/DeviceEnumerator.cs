@@ -26,13 +26,13 @@ namespace RigolLib
                                 break;
                             switch (info[1])
                             {
-                                case "DS110Z-S":
+                                case "DS1104Z-S":
                                 case "DS1074Z-S":
                                 case "DS1054Z-S":
                                 case "DS1104Z":
                                 case "DS1074Z":
                                 case "DS1054Z":
-                                case "MSO110Z-S":
+                                case "MSO1104Z-S":
                                 case "MSO1074Z-S":
                                 case "MSO1054Z-S":
                                 case "MSO1104Z":
